@@ -19,7 +19,7 @@ logger = get_logger(name="main", level="debug")
 
 
 def get_first_message():
-    return {"state": env.phi_function(),
+    return {"state": env.get_state(),
             "reward": 0.0,
             "is_over": False,
             "turn": random.choice([p1_topic, p2_topic]),
@@ -99,12 +99,12 @@ if __name__ == '__main__':
             # Perform action and get information about the result
             state, reward, is_over = env.take_action(sym=player, action=action)
 
-            # TODO: return 'phi' and state (not necessarily the same)
-
             # Indicate who is the next player on the output message
             turn = p2_topic if player == player_1 else p1_topic
 
             env_str = env.get_env_string()
+
+            # TODO: provide result of action taken by player (to learn?)
 
             # Report current state of environment on 'out_topic'
             env_message = {"state": state, "reward": reward, "is_over": is_over, "turn": turn, "env_str": env_str}

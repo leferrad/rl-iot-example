@@ -23,42 +23,19 @@ def standard_reward(env, sym, reward_positive=1, reward_negative=0):
 available_rewards = {'standard': standard_reward}
 
 
-def integer_phi(env):
-    # returns the current state, represented as an int
-    # from 0...|S|-1, where S = set of all possible states
-    # |S| = 3^(BOARD SIZE), since each cell can have 3 possible values - empty, x, o
-    # some states are not possible, e.g. all cells are x, but we ignore that detail
-    # this is like finding the integer represented by a base-3 number
-
-    v_mapping = {Environment.SYMBOL_EMPTY: 0, Environment.SYMBOL_X: 1, Environment.SYMBOL_O: 2}
-    k = 0
-    h = 0
-
-    for i in range(Environment.BOARD_LENGTH):
-        for j in range(Environment.BOARD_LENGTH):
-            v = v_mapping[env.board[i, j]]
-            h += (3 ** k) * v
-            k += 1
-    return h
-
-
-# TODO: try other phi functions and check what happens!
-
-available_phis = {"integer": integer_phi}
-
-
 class Environment(object):
-    BOARD_LENGTH = 3  # TODO: parameter of Environment?
+    BOARD_LENGTH = 3  # TODO: parameter of Environment
     SYMBOL_X = -1
     SYMBOL_O = 1
     SYMBOL_EMPTY = 0
 
     available_actions = list(itertools.product(range(BOARD_LENGTH), range(BOARD_LENGTH)))
     n_actions = len(available_actions)
+    n_dimensions = BOARD_LENGTH ** 2
 
-    cell_repr = {SYMBOL_X: " x ", SYMBOL_O: " o ", SYMBOL_EMPTY: "   "}
+    sym_repr = {SYMBOL_X: "x", SYMBOL_O: "o", SYMBOL_EMPTY: " "}
 
-    def __init__(self, reward_function='standard', phi_function="integer", seed=123):
+    def __init__(self, reward_function='standard', seed=123):
         self.board = np.zeros((Environment.BOARD_LENGTH, Environment.BOARD_LENGTH))
 
         self.winner = None
@@ -69,8 +46,6 @@ class Environment(object):
 
         assert reward_function in available_rewards
         self.reward_function = lambda sym: available_rewards[reward_function](self, sym)
-        assert phi_function in available_phis
-        self.phi_function = lambda: available_phis[phi_function](self)
 
         self.seed = seed
         np.random.seed(seed)
@@ -81,11 +56,11 @@ class Environment(object):
     def is_draw(self):
         return self.ended and self.winner is None
 
-    def get_env_string(self):
-        # cell_repr maps cell elements to 'x', 'o' or ' '
-        cell_repr = {k: v.strip() if len(v.strip()) != 0 else " " for (k, v) in self.cell_repr.items()}
+    def get_state(self):
+        return [int(x) for x in np.nditer(self.board)]
 
-        return "".join([cell_repr[int(x)] for x in np.nditer(self.board)])
+    def get_env_string(self):
+        return "".join([self.sym_repr[x] for x in self.get_state()])
 
     def get_possible_moves(self):
         return [(i, j) for (i, j) in self.available_actions if self.is_empty(i, j)]
@@ -157,7 +132,8 @@ class Environment(object):
         for i in range(Environment.BOARD_LENGTH):
             logger_func("-------------")
 
-            line = "|".join([self.cell_repr[s] for s in [self.board[i, j] for j in range(Environment.BOARD_LENGTH)]])
+            line = "|".join([" " + self.sym_repr[s] + " " for s in [self.board[i, j]
+                                                                    for j in range(Environment.BOARD_LENGTH)]])
             line = '|'+line+'|'
 
             logger_func(line)
@@ -179,7 +155,7 @@ class Environment(object):
         self.move(sym, i, j)
         self.actions_taken.append(action)
         reward = self.reward_function(sym)
-        state = self.phi_function()
+        state = self.get_state()
         is_over = self.game_over()
 
         return state, reward, is_over
