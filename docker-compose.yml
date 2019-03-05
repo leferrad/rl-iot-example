@@ -1,0 +1,82 @@
+version: "3"
+
+services:
+    mosquitto:
+      image: eclipse-mosquitto
+      hostname: mosquitto
+      container_name: mosquitto
+      networks:
+          - default
+      expose:
+          - "1883"
+          - "9001"
+      ports:
+          - "1883:1883"
+          - "9001:9001"
+
+    environment:
+      build: .
+      hostname: environment
+      container_name: environment
+      command: ["python3", "scripts/environment_service.py"]
+      volumes:
+        - ./:/data
+      restart: unless-stopped
+
+      networks:
+        - default
+
+      environment:
+        - MQTT_HOST_ADDRESS=mosquitto
+        - MQTT_HOST_PORT=1883
+        - MQTT_P1_TOPIC=/p1
+        - MQTT_P2_TOPIC=/p2
+        - MQTT_ENV_TOPIC=/env
+
+    agent1:
+      build: .
+      hostname: agent1
+      container_name: agent1
+      command: ["python3", "scripts/random_agent_service.py"]  # TODO: load model
+      volumes:
+        - ./:/data
+      restart: unless-stopped
+
+      networks:
+      - default
+
+      environment:
+        - MQTT_HOST_ADDRESS=mosquitto
+        - MQTT_HOST_PORT=1883
+        - MQTT_P1_TOPIC=/p1
+        - MQTT_P2_TOPIC=/p2
+        - MQTT_ENV_TOPIC=/env
+        - MODEL_FILENAME=/data/models/agent.pkl
+        - PLAYER=1
+
+    agent2:
+      build: .
+      hostname: agent2
+      container_name: agent2
+      command: ["python3", "scripts/random_agent_service.py"]  # TODO: load model
+      volumes:
+        - ./:/data
+      restart: unless-stopped
+
+      networks:
+      - default
+
+      environment:
+        - MQTT_HOST_ADDRESS=mosquitto
+        - MQTT_HOST_PORT=1883
+        - MQTT_P1_TOPIC=/p1
+        - MQTT_P2_TOPIC=/p2
+        - MQTT_ENV_TOPIC=/env
+        - MODEL_FILENAME=/data/models/agent.pkl
+        - PLAYER=2
+
+  # TODO: trainer container?
+
+
+networks:
+    default:
