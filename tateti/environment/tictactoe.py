@@ -7,8 +7,9 @@
 __author__ = 'leferrad'
 
 import numpy as np
-import itertools
+
 import copy
+import itertools
 
 
 def standard_reward(env, sym, reward_positive=1, reward_negative=0):
@@ -28,6 +29,7 @@ class Environment(object):
     SYMBOL_X = -1
     SYMBOL_O = 1
     SYMBOL_EMPTY = 0
+    NEGATIVE_REWARD_ILLEGAL_MOVE = -1.0
 
     available_actions = list(itertools.product(range(BOARD_LENGTH), range(BOARD_LENGTH)))
     n_actions = len(available_actions)
@@ -43,12 +45,17 @@ class Environment(object):
         self.num_states = 3 ** (Environment.BOARD_LENGTH * Environment.BOARD_LENGTH)
         
         self.actions_taken = []
+        self.score = {k: 0 for k in self.sym_repr.values()}
 
         assert reward_function in available_rewards
         self.reward_function = lambda sym: available_rewards[reward_function](self, sym)
 
+        # Set seed on random module
         self.seed = seed
         np.random.seed(seed)
+
+        # First player is randomly chosen
+        self.turn = np.random.choice([self.SYMBOL_X, self.SYMBOL_O])
 
     def is_empty(self, i, j):
         return self.board[i, j] == 0
@@ -72,18 +79,16 @@ class Environment(object):
                                # x_a: tuple of (element of cell, action)
                                zip(env_str, Environment.available_actions))))
 
-    def game_over(self, force_recalculate=True):
+    def game_over(self):
         # returns true if game over (a player has won or it's a draw)
         # otherwise returns false
         # also sets 'winner' instance variable and 'ended' instance variable
-        if not force_recalculate and self.ended:
-            return self.ended
 
         # check rows
         for i in range(Environment.BOARD_LENGTH):
             for player in (self.SYMBOL_X, self.SYMBOL_O):
                 if self.board[i].sum() == player * Environment.BOARD_LENGTH:
-                    self.winner = player
+                    self.winner = self.sym_repr[player]
                     self.ended = True
                     return True
 
@@ -91,7 +96,7 @@ class Environment(object):
         for j in range(Environment.BOARD_LENGTH):
             for player in (self.SYMBOL_X, self.SYMBOL_O):
                 if self.board[:, j].sum() == player * Environment.BOARD_LENGTH:
-                    self.winner = player
+                    self.winner = self.sym_repr[player]
                     self.ended = True
                     return True
 
@@ -99,12 +104,12 @@ class Environment(object):
         for player in (self.SYMBOL_X, self.SYMBOL_O):
             # top-left -> bottom-right diagonal
             if self.board.trace() == player * Environment.BOARD_LENGTH:
-                self.winner = player
+                self.winner = self.sym_repr[player]
                 self.ended = True
                 return True
             # top-right -> bottom-left diagonal
             if np.fliplr(self.board).trace() == player * Environment.BOARD_LENGTH:
-                self.winner = player
+                self.winner = self.sym_repr[player]
                 self.ended = True
                 return True
 
@@ -131,12 +136,11 @@ class Environment(object):
 
         for i in range(Environment.BOARD_LENGTH):
             logger_func("-------------")
-
             line = "|".join([" " + self.sym_repr[s] + " " for s in [self.board[i, j]
                                                                     for j in range(Environment.BOARD_LENGTH)]])
             line = '|'+line+'|'
-
             logger_func(line)
+
         logger_func("-------------")
 
     def move(self, sym, i, j):
@@ -148,24 +152,38 @@ class Environment(object):
         self.board[i, j] = sym
 
     def take_action(self, sym, action):
-        assert action in self.get_possible_moves(), \
-            ValueError("Action '%s' doesn't belong to the possible movements: %s",
-                       str(action), str(self.get_possible_moves()))
-        i, j = action
-        self.move(sym, i, j)
-        self.actions_taken.append(action)
-        reward = self.reward_function(sym)
+        assert sym == self.turn
+
+        if action in self.get_possible_moves():
+            # Then this is a legal action that will be taken on the env
+            i, j = action
+            self.move(sym, i, j)
+            self.actions_taken.append(action)
+            reward = self.reward_function(sym)
+            self.turn = self.SYMBOL_X if sym == self.SYMBOL_O else self.SYMBOL_O
+        else:
+            # Otherwise, 'action' is an illegal move that must be show to the agent with a negative reward
+            reward = self.NEGATIVE_REWARD_ILLEGAL_MOVE
+            # The turn doesn't change, and no movement is applied to the env
+
         state = self.get_state()
         is_over = self.game_over()
 
-        return state, reward, is_over
+        if is_over:
+            self._update_score()
+
+        return state, reward, is_over, self.turn
+
+    def _update_score(self):
+        winner = self.winner if self.winner is not None else self.sym_repr[self.SYMBOL_EMPTY]
+        self.score[winner] += 1
 
     @staticmethod
     def sample_action():
         return np.random.choice(list(Environment.available_actions))
 
     def render(self):
-        return self.board.__repr__()
+        return self.draw_board(print)
 
     def copy(self, deep=True):
         return copy.deepcopy(self) if deep else copy.copy(self)
@@ -175,4 +193,7 @@ class Environment(object):
         self.actions_taken = []
         self.ended = False
         self.winner = None
+
+        # First player is randomly chosen
+        self.turn = np.random.choice([self.SYMBOL_X, self.SYMBOL_O])
 
