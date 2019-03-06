@@ -97,10 +97,7 @@ if __name__ == '__main__':
             assert "action" in msg_in
             action = tuple(msg_in["action"])
             # Perform action and get information about the result
-            state, reward, is_over = env.take_action(sym=player, action=action)
-
-            # Indicate who is the next player on the output message
-            turn = p2_topic if player == player_1 else p1_topic
+            state, reward, is_over, turn = env.take_action(sym=player, action=action)
 
             env_str = env.get_env_string()
 
