@@ -53,7 +53,7 @@ class BaseAgent(object):
         self.model.load(dirname)
 
 
-def play_one(agent1, agent2, env):
+def play_one(agent_x, agent_o, env):
     observation = env.get_state()
 
     total_reward = {Environment.SYMBOL_X: 0, Environment.SYMBOL_O: 0}
@@ -62,7 +62,7 @@ def play_one(agent1, agent2, env):
     while not env.game_over():
 
         sym = env.turn
-        agent = agent1 if sym == Environment.SYMBOL_X else agent2
+        agent = agent_x if sym == Environment.SYMBOL_X else agent_o
 
         action = agent.act(observation)
 
