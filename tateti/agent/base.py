@@ -5,12 +5,18 @@
 from tateti.agent import phi
 from tateti.agent import strategy
 from tateti.environment.tictactoe import Environment
-from tateti.util.fileio import get_logger
+from tateti.util.fileio import get_logger, serialize_python_object, deserialize_python_object
 
 import numpy as np
 
 
 logger = get_logger(__name__, level="debug")
+
+
+def argmax_value(v):
+    # Return the argmax of v (being a list of one element)
+    # This function could be anonymous (lambda) but in that case BaseAgent cannot be serialized
+    return np.argmax(v[0])
 
 
 available_phis = {"identity": phi.IdentityPhi(n_dims=Environment.n_dimensions),
@@ -20,10 +26,10 @@ available_phis = {"identity": phi.IdentityPhi(n_dims=Environment.n_dimensions),
 
 
 available_strategies = {"egreedy": strategy.EpsilonGreedy(available_actions=Environment.available_actions,
-                                                          exploit_func=lambda v: np.argmax(v[0]),
+                                                          exploit_func=argmax_value,
                                                           epsilon=0.9, decay=0.95),
                         "boltzmann": strategy.Boltzmann(available_actions=Environment.available_actions,
-                                                        exploit_func=lambda v: np.argmax(v[0]),
+                                                        exploit_func=argmax_value,
                                                         epsilon=0.9, decay=0.95)}
 
 
@@ -44,13 +50,14 @@ class BaseAgent(object):
     def update(self, state, action, reward, next_state, terminal):
         pass
 
-    def save(self, dirname):
+    def save(self, filename):
         # TODO: pickle whole object
-        self.model.save(dirname)
+        success = serialize_python_object(self, filename)
+        if not success:
+            raise AssertionError("Agent could not be saved!")
 
-    def load(self, dirname):
-        # TODO: unpickle whole object
-        self.model.load(dirname)
+    def load(self, filename):
+        return deserialize_python_object(filename)
 
 
 def play_one(agent_x, agent_o, env):

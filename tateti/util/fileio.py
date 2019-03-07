@@ -4,6 +4,7 @@
 import logging
 import logging.handlers
 import json
+import pickle
 import tarfile
 import os
 
@@ -48,6 +49,27 @@ def get_logger(name='tateti', level='debug', disabled=False):
     return logger
 
 
+def serialize_python_object(obj, filename):
+    try:
+        with open(filename, 'wb') as f:
+            pickle.dump(obj, f)
+        successful = True
+    except:
+        successful = False
+    return successful
+
+
+def deserialize_python_object(filename):
+    try:
+        with open(filename, 'rb') as f:
+            obj = pickle.load(f)
+    except:
+        obj = None
+    return obj
+
+
+# TODO: used?
+
 def save_dict_as_json(dictobj, filename, pretty_print=True):
     try:
         with open(filename, 'w') as f:
@@ -60,6 +82,7 @@ def save_dict_as_json(dictobj, filename, pretty_print=True):
         successful = False
     return successful
 
+# TODO: used?
 
 def load_json_as_dict(filename):
     try:
@@ -69,6 +92,7 @@ def load_json_as_dict(filename):
         dictobj = None
     return dictobj
 
+# TODO: used?
 
 def compress_tar_files(files, filename):
     if isinstance(files, list) is False:
@@ -84,6 +108,8 @@ def compress_tar_files(files, filename):
     return successful
 
 
+# TODO: used?
+
 def decompress_tar_files(filename):
     try:
         with tarfile.open(filename, "r:gz") as tar:
@@ -92,3 +118,5 @@ def decompress_tar_files(filename):
     except:
         successful = False
     return successful
+
+
