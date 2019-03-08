@@ -7,6 +7,7 @@ __author__ = 'leferrad'
 # NOTE: pretty based on https://github.com/gsurma/cartpole/blob/master/cartpole.py
 
 from tateti.agent.base import BaseAgent
+from tateti.environment.tictactoe import Environment
 
 from keras.models import Sequential
 from keras.layers import Dense
@@ -32,7 +33,7 @@ class DQNAgent(BaseAgent):
         self.model = model
 
     @staticmethod
-    def _build_default_model(observation_space, action_space, n_hidden=24, activation="relu", lr=1e-3):
+    def _build_default_model(observation_space, action_space, n_hidden=50, activation="relu", lr=1e-3):
         model = Sequential()
         model.add(Dense(n_hidden, input_shape=(observation_space,), activation=activation))
         model.add(Dense(n_hidden, activation=activation))
@@ -44,10 +45,20 @@ class DQNAgent(BaseAgent):
     def remember(self, state, action, reward, next_state, terminal):
         self.memory.append((state, action, reward, next_state, terminal))
 
-    def act(self, state):
+    def act(self, state, env_string, explore=True):
+        # Filter available actions to take
+        sym_empty = Environment.sym_repr[Environment.SYMBOL_EMPTY]
+        available_actions = [i for (i, s) in enumerate(env_string) if s == sym_empty]
+
+        # Get Q-values for available actions
         state_x = self.phi(state)
         q_values = self.predict(state_x)
-        action = self.strategy.sample_action(v=q_values)
+        q_values = [q_values[i] for i in available_actions]
+
+        # Get index of sampled available action from strategy used
+        action_int = self.strategy.sample_action(v=q_values, explore=explore)
+        action_int = available_actions[action_int]  # Index of available to index of all actions
+        action = Environment.available_actions[action_int]  # Get action to take
 
         return action
 

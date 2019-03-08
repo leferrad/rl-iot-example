@@ -14,9 +14,9 @@ logger = get_logger(__name__, level="debug")
 
 
 def argmax_value(v):
-    # Return the argmax of v (being a list of one element)
+    # Return the argmax of v (having as many elements as possible actions)
     # This function could be anonymous (lambda) but in that case BaseAgent cannot be serialized
-    return np.argmax(v[0])
+    return np.argmax(v)
 
 
 available_phis = {"identity": phi.IdentityPhi(n_dims=Environment.n_dimensions),
@@ -25,11 +25,9 @@ available_phis = {"identity": phi.IdentityPhi(n_dims=Environment.n_dimensions),
                                           max_value=max(Environment.SYMBOL_X, Environment.SYMBOL_O))}
 
 
-available_strategies = {"egreedy": strategy.EpsilonGreedy(available_actions=Environment.available_actions,
-                                                          exploit_func=argmax_value,
+available_strategies = {"egreedy": strategy.EpsilonGreedy(exploit_func=argmax_value,
                                                           epsilon=0.9, decay=0.95),
-                        "boltzmann": strategy.Boltzmann(available_actions=Environment.available_actions,
-                                                        exploit_func=argmax_value,
+                        "boltzmann": strategy.Boltzmann(exploit_func=argmax_value,
                                                         epsilon=0.9, decay=0.95)}
 
 
@@ -44,7 +42,7 @@ class BaseAgent(object):
         self.gamma = gamma
         self.model = None
 
-    def act(self, state):
+    def act(self, state, env_string, explore=True):
         pass
 
     def update(self, state, action, reward, next_state, terminal):
@@ -71,7 +69,7 @@ def play_one(agent_x, agent_o, env):
         sym = env.turn
         agent = agent_x if sym == Environment.SYMBOL_X else agent_o
 
-        action = agent.act(observation)
+        action = agent.act(observation, env.get_env_string(), explore=True)
 
         next_observation, reward, done, turn = env.take_action(sym, action)
         

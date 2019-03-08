@@ -13,8 +13,7 @@ import numpy as np
 
 
 class Strategy(object):
-    def __init__(self, available_actions, exploit_func, seed=123):
-        self.available_actions = available_actions
+    def __init__(self, exploit_func, seed=123):
         self.exploit_func = exploit_func
         self.seed = seed
         np.random.seed(seed)
@@ -28,20 +27,21 @@ class Strategy(object):
 
 class EpsilonGreedy(Strategy):
     """Epsilon Greedy (a.k.a ε-greedy) strategy"""
-    def __init__(self, available_actions, exploit_func, epsilon=0.9, decay=0.95, epsilon_min=0.05, seed=123):
+    def __init__(self, exploit_func, epsilon=0.9, decay=0.95, epsilon_min=0.05, seed=123):
         self.epsilon = epsilon
         self.epsilon_min = epsilon_min
         self.decay = decay
 
-        Strategy.__init__(self, available_actions=available_actions, exploit_func=exploit_func, seed=seed)
+        Strategy.__init__(self, exploit_func=exploit_func, seed=seed)
 
-    def sample_action(self, v):
-        if np.random.uniform(0, 1) > self.epsilon:
-            a_int = np.random.choice(range(len(self.available_actions)))
+    def sample_action(self, v, explore=True):
+        # Assuming as many actions as number of elements in v
+        if explore and np.random.uniform(0, 1) > self.epsilon:
+            a_int = np.random.choice(range(len(v)))
         else:
             a_int = self.exploit_func(v)
 
-        return self.available_actions[a_int]
+        return a_int
 
     def update(self):
         self.epsilon *= self.decay
@@ -51,12 +51,12 @@ class EpsilonGreedy(Strategy):
 class Boltzmann(Strategy):
     # TODO: not having deterministic results
 
-    def __init__(self, available_actions, exploit_func, epsilon=0.9, decay=0.95, epsilon_min=0.05, seed=123):
+    def __init__(self, exploit_func, epsilon=0.9, decay=0.95, epsilon_min=0.05, seed=123):
         self.epsilon = epsilon
         self.epsilon_min = epsilon_min
         self.decay = decay
 
-        Strategy.__init__(self, available_actions=available_actions, exploit_func=exploit_func, seed=seed)
+        Strategy.__init__(self, exploit_func=exploit_func, seed=seed)
 
     def update(self):
         self.epsilon *= self.decay
@@ -78,12 +78,13 @@ class Boltzmann(Strategy):
 
         return softmax_p
 
-    def sample_action(self, v):
-        if np.random.uniform(0, 1) > self.epsilon:
+    def sample_action(self, v, explore=True):
+        # Assuming as many actions as number of elements in v
+        if explore and np.random.uniform(0, 1) > self.epsilon:
             # Explore through Boltzmann method
             probability_actions = self.get_boltzmann_values(v)
-            a_int = np.random.choice(range(len(self.available_actions)), p=probability_actions)
+            a_int = np.random.choice(range(len(v)), p=probability_actions)
         else:
             a_int = self.exploit_func(v)
 
-        return self.available_actions[a_int]
+        return a_int
