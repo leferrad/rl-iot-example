@@ -15,7 +15,7 @@ import itertools
 def standard_reward(env, sym, reward_positive=1, reward_negative=0):
     reward = reward_negative
     if env.game_over():
-        reward = reward_positive if env.winner == sym else reward_negative
+        reward = reward_positive if env.winner == Environment.sym_repr[sym] else reward_negative
     return reward
 
 
@@ -153,18 +153,14 @@ class Environment(object):
 
     def take_action(self, sym, action):
         assert sym == self.turn
+        assert action in self.get_possible_moves()
 
-        if action in self.get_possible_moves():
-            # Then this is a legal action that will be taken on the env
-            i, j = action
-            self.move(sym, i, j)
-            self.actions_taken.append(action)
-            reward = self.reward_function(sym)
-            self.turn = self.SYMBOL_X if sym == self.SYMBOL_O else self.SYMBOL_O
-        else:
-            # Otherwise, 'action' is an illegal move that must be show to the agent with a negative reward
-            reward = self.NEGATIVE_REWARD_ILLEGAL_MOVE
-            # The turn doesn't change, and no movement is applied to the env
+        # Then this is a legal action that will be taken on the env
+        i, j = action
+        self.move(sym, i, j)
+        self.actions_taken.append(action)
+        reward = self.reward_function(sym)
+        self.turn = self.SYMBOL_X if sym == self.SYMBOL_O else self.SYMBOL_O
 
         state = self.get_state()
         is_over = self.game_over()
