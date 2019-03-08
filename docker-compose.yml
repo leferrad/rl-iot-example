@@ -6,13 +6,13 @@ services:
       hostname: mosquitto
       container_name: mosquitto
       networks:
-          - default
+        - default
       expose:
-          - "1883"
-          - "9001"
+        - "1883"
+        - "9001"
       ports:
-          - "1883:1883"
-          - "9001:9001"
+        - "1883:1883"
+        - "9001:9001"
 
     environment:
       build: .
@@ -20,7 +20,7 @@ services:
       container_name: environment
       command: ["python3", "scripts/environment_service.py"]
       volumes:
-        - ./:/data
+        - ./models:/models
       restart: unless-stopped
 
       networks:
@@ -33,17 +33,35 @@ services:
         - MQTT_P2_TOPIC=/p2
         - MQTT_ENV_TOPIC=/env
 
+    trainer:
+      build: .
+      hostname: trainer
+      container_name: trainer
+      command: ["jupyter", "notebook", "--port=8888", "--ip=0.0.0.0", "--no-browser", "--allow-root"]
+      volumes:
+        - ./models:/models
+      restart: unless-stopped
+
+      networks:
+        - default
+
+      expose:
+        - "8888"
+
+      ports:
+        - "8888:8888"
+
     agent1:
       build: .
       hostname: agent1
       container_name: agent1
       command: ["python3", "scripts/random_agent_service.py"]  # TODO: load model
       volumes:
-        - ./:/data
+        - ./models:/models
       restart: unless-stopped
 
       networks:
-      - default
+        - default
 
       environment:
         - MQTT_HOST_ADDRESS=mosquitto
@@ -60,11 +78,11 @@ services:
       container_name: agent2
       command: ["python3", "scripts/random_agent_service.py"]  # TODO: load model
       volumes:
-        - ./:/data
+        - ./models:/models
       restart: unless-stopped
 
       networks:
-      - default
+        - default
 
       environment:
         - MQTT_HOST_ADDRESS=mosquitto
@@ -74,9 +92,6 @@ services:
         - MQTT_ENV_TOPIC=/env
         - MODEL_FILENAME=/data/models/agent.pkl
         - PLAYER=2
-
-  # TODO: trainer container?
-
 
 networks:
     default:
