@@ -45,6 +45,10 @@ if __name__ == '__main__':
 
     agent = DQNAgent.load(args.filename)
 
+    if agent is None:
+        logger.error("Model couldn't be loaded from '%s'", args.filename)
+        exit(0)
+
     out_topic = os.environ['MQTT_P1_TOPIC'] if player == Environment.SYMBOL_X else os.environ["MQTT_P2_TOPIC"]
     
     logger.info("Agent topic: %s" % str(out_topic))
