@@ -79,6 +79,7 @@ For more details about the solution in terms of Reinforcement Learning, check `d
 
 ### Next steps
 
+- Better documentation (especially docstrings on code)
 - More testing about parameters and learning process of agents
 - UI rendering through Flask
 - Test more RL algorithms (e.g. agents, strategies, etc)
