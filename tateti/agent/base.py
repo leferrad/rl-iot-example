@@ -25,10 +25,8 @@ available_phis = {"identity": phi.IdentityPhi(n_dims=Environment.n_dimensions),
                                           max_value=max(Environment.SYMBOL_X, Environment.SYMBOL_O))}
 
 
-available_strategies = {"egreedy": strategy.EpsilonGreedy(exploit_func=argmax_value,
-                                                          epsilon=0.9, decay=0.95),
-                        "boltzmann": strategy.Boltzmann(exploit_func=argmax_value,
-                                                        epsilon=0.9, decay=0.95)}
+available_strategies = {"egreedy": strategy.EpsilonGreedy(exploit_func=argmax_value, epsilon=0.7),
+                        "boltzmann": strategy.Boltzmann(exploit_func=argmax_value, epsilon=0.9)}
 
 
 class BaseAgent(object):
@@ -84,7 +82,7 @@ def play_one(agent_x, agent_o, env):
             logger.info("GAME OVER! Winner: %s" % str(env.winner))
 
             # In order to teach agents how they have lost, punish previous actions that lead them to lose
-            losing_player = agent_x if agent_o == agent else agent_o
+            losing_player = agent_x if sym == Environment.SYMBOL_O else agent_o
             losing_player.punish_lost()
 
         observation = next_observation
