@@ -4,7 +4,7 @@
 
 __author__ = 'leferrad'
 
-# NOTE: pretty based on https://github.com/gsurma/cartpole/blob/master/cartpole.py
+# NOTE: pretty based on https://keon.io/deep-q-learning/
 
 from tateti.agent.base import BaseAgent
 from tateti.environment.tictactoe import Environment
@@ -111,4 +111,9 @@ class DQNAgent(BaseAgent):
             return
 
         self.experience_replay()
+
+    def punish_lost(self):
+        state, action, reward, next_state, terminal = self.memory.pop()  # Get last trace to be modified
+        reward = Environment.NEGATIVE_REWARD_LOST  # Modify reward as a "punishment" for losing match
+        self.remember(state, action, reward, next_state, terminal)  # Add updated trace to be learned
 

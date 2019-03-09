@@ -32,7 +32,7 @@ available_strategies = {"egreedy": strategy.EpsilonGreedy(exploit_func=argmax_va
 
 
 class BaseAgent(object):
-    def __init__(self, env, gamma=0.99, phi_function="scaled", strategy_function='egreedy'):
+    def __init__(self, env, gamma=0.95, phi_function="scaled", strategy_function='egreedy'):
         self.phi = available_phis[phi_function]
         self.strategy = available_strategies[strategy_function]
 
@@ -82,7 +82,10 @@ def play_one(agent_x, agent_o, env):
 
         if done:
             logger.info("GAME OVER! Winner: %s" % str(env.winner))
-            # TODO: competitor agent should receive a negative reward due to not avoid losing?
+
+            # In order to teach agents how they have lost, punish previous actions that lead them to lose
+            losing_player = agent_x if agent_o == agent else agent_o
+            losing_player.punish_lost()
 
         observation = next_observation
         steps += 1
