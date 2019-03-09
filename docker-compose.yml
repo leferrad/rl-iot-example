@@ -55,7 +55,7 @@ services:
       build: .
       hostname: agent1
       container_name: agent1
-      command: ["python3", "scripts/random_agent_service.py"]  # TODO: load model
+      command: ["python3", "scripts/dqn_agent_service.py"]
       volumes:
         - ./models:/models
       restart: unless-stopped
@@ -76,7 +76,7 @@ services:
       build: .
       hostname: agent2
       container_name: agent2
-      command: ["python3", "scripts/random_agent_service.py"]  # TODO: load model
+      command: ["python3", "scripts/dqn_agent_service.py"]  # TODO: load model through env var?
       volumes:
         - ./models:/models
       restart: unless-stopped
