@@ -27,7 +27,8 @@ class Strategy(object):
 
 class EpsilonGreedy(Strategy):
     """Epsilon Greedy (a.k.a ε-greedy) strategy"""
-    def __init__(self, exploit_func, epsilon=0.9, decay=0.95, epsilon_min=0.05, seed=123):
+    def __init__(self, exploit_func, epsilon=0.95, decay=0.95, epsilon_min=0.1, seed=123):
+        self.epsilon_init = epsilon
         self.epsilon = epsilon
         self.epsilon_min = epsilon_min
         self.decay = decay
@@ -47,11 +48,15 @@ class EpsilonGreedy(Strategy):
         self.epsilon *= self.decay
         self.epsilon = max(self.epsilon, self.epsilon_min)
 
+    def reset(self):
+        self.epsilon = self.epsilon_init
+
 
 class Boltzmann(Strategy):
     # TODO: not having deterministic results
 
     def __init__(self, exploit_func, epsilon=0.9, decay=0.95, epsilon_min=0.05, seed=123):
+        self.epsilon_init = epsilon
         self.epsilon = epsilon
         self.epsilon_min = epsilon_min
         self.decay = decay
@@ -61,6 +66,9 @@ class Boltzmann(Strategy):
     def update(self):
         self.epsilon *= self.decay
         self.epsilon = max(self.epsilon, self.epsilon_min)
+
+    def reset(self):
+        self.epsilon = self.epsilon_init
 
     @staticmethod
     def get_boltzmann_values(p):
