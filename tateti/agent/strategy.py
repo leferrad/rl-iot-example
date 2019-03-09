@@ -27,6 +27,29 @@ class Strategy(object):
 
 class EpsilonGreedy(Strategy):
     """Epsilon Greedy (a.k.a ε-greedy) strategy"""
+    def __init__(self, exploit_func, epsilon=0.7, seed=123):
+        self.epsilon = epsilon
+
+        Strategy.__init__(self, exploit_func=exploit_func, seed=seed)
+
+    def sample_action(self, v, explore=True):
+        # Assuming as many actions as number of elements in v
+        if explore and np.random.uniform(0, 1) > self.epsilon:
+            a_int = np.random.choice(range(len(v)))
+        else:
+            a_int = self.exploit_func(v)
+
+        return a_int
+
+    def update(self):
+        pass
+
+    def reset(self):
+        pass
+
+
+class DecayEpsilonGreedy(Strategy):
+    """Epsilon Greedy (a.k.a ε-greedy) strategy with decay"""
     def __init__(self, exploit_func, epsilon=0.95, decay=0.95, epsilon_min=0.1, seed=123):
         self.epsilon_init = epsilon
         self.epsilon = epsilon
