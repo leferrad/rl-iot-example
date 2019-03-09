@@ -21,7 +21,7 @@ import random
 class DQNAgent(BaseAgent):
 
     def __init__(self, env, model=None, gamma=0.95, phi_function="integer", strategy_function='egreedy',
-                 memory_size=1e3, batch_size=10):
+                 memory_size=400, batch_size=10):
         BaseAgent.__init__(self, env=env, gamma=gamma, phi_function=phi_function, strategy_function=strategy_function)
 
         self.memory = deque(maxlen=int(memory_size))
@@ -33,12 +33,13 @@ class DQNAgent(BaseAgent):
         self.model = model
 
     @staticmethod
-    def _build_default_model(observation_space, action_space, n_hidden=50, activation="relu", lr=1e-3):
+    def _build_default_model(observation_space, action_space, n_hidden=24, activation="relu", lr=1e-3):
         model = Sequential()
         model.add(Dense(n_hidden, input_shape=(observation_space,), activation=activation))
         model.add(Dense(n_hidden, activation=activation))
+        model.add(Dense(n_hidden, activation=activation))
         model.add(Dense(action_space, activation="linear"))
-        model.compile(loss="mse", optimizer=Adam(lr=lr))
+        model.compile(loss="mae", optimizer=Adam(lr=lr))
 
         return model
 
@@ -103,9 +104,11 @@ class DQNAgent(BaseAgent):
 
         self.remember(state, action, reward, next_state, terminal)
 
+        self.strategy.update()
+
         if len(self.memory) < self.batch_size:
+            # Not enough memory to apply experience replay
             return
 
         self.experience_replay()
-        self.strategy.update()
 
