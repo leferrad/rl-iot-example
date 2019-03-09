@@ -29,7 +29,7 @@ class Environment(object):
     SYMBOL_X = -1
     SYMBOL_O = 1
     SYMBOL_EMPTY = 0
-    NEGATIVE_REWARD_ILLEGAL_MOVE = -1.0
+    NEGATIVE_REWARD_LOST = -1.0
 
     available_actions = list(itertools.product(range(BOARD_LENGTH), range(BOARD_LENGTH)))
     n_actions = len(available_actions)
