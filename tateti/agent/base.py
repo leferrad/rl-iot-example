@@ -54,7 +54,8 @@ class BaseAgent(object):
         if not success:
             raise AssertionError("Agent could not be saved!")
 
-    def load(self, filename):
+    @classmethod
+    def load(cls, filename):
         return deserialize_python_object(filename)
 
 
@@ -81,6 +82,7 @@ def play_one(agent_x, agent_o, env):
 
         if done:
             logger.info("GAME OVER! Winner: %s" % str(env.winner))
+            # TODO: competitor agent should receive a negative reward due to not avoid losing?
 
         observation = next_observation
         steps += 1
